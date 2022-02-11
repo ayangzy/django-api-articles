@@ -1,4 +1,6 @@
+from cgitb import lookup
 from gc import get_objects
+from pickle import NONE
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from rest_framework.parsers import JSONParser
@@ -8,48 +10,39 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework import mixins
+from rest_framework import generics
 
 
 # Create your views here.
-
-class ArticleAPIVIEW(APIView):
-    def get(self, request):
-        articles = Article.objects.all()
-        serializer = ArticleSerializer(articles, many=True)
-        return JsonResponse(serializer.data, self=False)
+class GenericAPIView(generics.GenericAPIView, 
+                     mixins.ListModelMixin, 
+                     mixins.CreateModelMixin, 
+                     mixins.UpdateModelMixin,
+                    mixins.RetrieveModelMixin,
+                     mixins.DestroyModelMixin
+                     ):
+    serializer_class = ArticleSerializer
+    queryset = Article.objects.all()
+    
+    lookup_field = 'id'
+    
+    def get(self, request, id=NONE):
+        if id:
+            return self.retrieve(request)
+        else:
+            return self.list(request)
     
     def post(self, request):
-        serializer = ArticleSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.create(request)
 
-class ArticleDetails(APIView):
-    def get_object(self, id):
-        try:
-           return Article.objects.get(id=id)
-        except Article.DoesNotExist:
-         return Response(status=status.HTTP_404_NOT_FOUND)
+    def put(self, request, id=NONE):
+        return self.update(request, id)
     
-    def get(self, request, id):
-        article = self.get_object(id)
-        serializer = ArticleSerializer(article)
-        return Response(serializer.data)
+    def delete(self, request, id = NONE):
+        return self.destroy(request, id)
 
-    def put(self, request, id):
-        article = self.get_object(id)
-        serializer = ArticleSerializer(article, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, id):
-        article = self.get_object(id)
-        article.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        
-        
+
         
    
