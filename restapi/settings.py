@@ -39,8 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'api_basic',
     'rest_framework',
+    'rest_framework.authtoken'
    
 ]
+
+
+REST_FRAMEWORK = {
+    
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+}
 
 
 
@@ -71,6 +78,8 @@ TEMPLATES = [
         },
     },
 ]
+
+
 
 WSGI_APPLICATION = 'restapi.wsgi.application'
 
